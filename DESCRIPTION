@@ -2,7 +2,7 @@ Package: summarytabl
 Type: Package
 Title: Generate Summary Tables for Categorical, Ordinal, and Continuous
         Data
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: c(
     person(given = "Ama", family = "Nyame-Mensah", 
     email = "ama@anyamemensah.com", role = c("aut", "cre")))
@@ -18,15 +18,15 @@ Description: Provides functions for tabulating and summarizing
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: cli (>= 3.6.5), dplyr (>= 1.1.4), purrr (>= 1.1.0), rlang (>=
-        1.1.6), stats (>= 4.4.2), tibble (>= 3.3.0), tidyr (>= 1.3.1),
+Imports: cli, dplyr (>= 1.1.4), purrr (>= 1.1.0), rlang, stats, tibble,
+        tidyr,
 RoxygenNote: 7.3.3
-Suggests: knitr (>= 1.50), rmarkdown (>= 2.29), testthat (>= 3.0.0)
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Depends: R (>= 4.1.0)
 NeedsCompilation: no
-Packaged: 2025-11-06 00:29:09 UTC; AmaNM
+Packaged: 2025-11-06 10:14:57 UTC; AmaNM
 Author: Ama Nyame-Mensah [aut, cre]
 Repository: CRAN
-Date/Publication: 2025-11-06 00:40:02 UTC
+Date/Publication: 2025-11-06 11:20:02 UTC
