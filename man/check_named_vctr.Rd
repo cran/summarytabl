@@ -9,7 +9,8 @@ check_named_vctr(x, names, default)
 \arguments{
 \item{x}{A named vector.}
 
-\item{names}{A character vector specifying the names to be matched.}
+\item{names}{A character vector or list of character vectors of length one
+specifying the names to be matched.}
 
 \item{default}{Default value to return}
 }
@@ -17,12 +18,12 @@ check_named_vctr(x, names, default)
 Either the original object, \code{x}, or the \code{default} value.
 }
 \description{
-This function assesses whether named lists and vectors have
-invalid values (like \code{NULL} or \code{NA}), invalid names (such as missing or
-empty names), confirms that the count of valid names matches the count of
-provided values, and verifies that the valid names obtained from the named
-object align with the supplied names. If any checks fail, the \code{default}
-value is returned.
+This function checks whether named lists and vectors contain
+invalid values (like \code{NULL} or \code{NA}), have invalid names (such as missing
+or empty names), ensures the number of valid names matches the number of
+supplied values, and confirms that valid names from the object correspond
+to the provided names. If any of these checks fail, the function returns
+the \code{default} value.
 }
 \examples{
 
@@ -34,7 +35,12 @@ check_named_vctr(x = c(one = 1, two = 2, 3),
 # returns x
 check_named_vctr(x = list(one = 1, two = 2, three = 3), 
                  names = list("one", "two", "three"),
-                 default = NULL)               
+                 default = NULL)  
+
+# also returns x
+check_named_vctr(x = c(baako = 1, mmienu = 2, mmiensa = 3), 
+                 names = list("baako", "mmienu", "mmiensa"),
+                 default = NULL)              
                  
 }
 \author{

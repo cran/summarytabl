@@ -1,53 +1,100 @@
 # Test mean_tbl
 
-test_that("Invalid 'data' argument", {
-  expect_error(
+test_that("Failure: 'data' argument", {
+  expect_snapshot(error = TRUE, {
     mean_tbl(
       data = NULL,
       var_stem = "belong_belong"
-    ),
-    "The 'data' argument is not a data frame."
-  )
-
-  expect_error(
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     mean_tbl(
       data = data.frame(),
       var_stem = "belong_belong"
-    ),
-    "The 'data' argument is empty."
-  )
+    )
+  })
 })
 
-
-test_that("Invalid 'var_stem' argument and no 'cols' found", {
-  expect_error(
+test_that("Failure: Invalid 'var_stem' argument", {
+  ex_mean_dat <- tibble::tibble(var_1 = 1:3, `var 2` = 5:7)
+  
+  expect_snapshot(error = TRUE, {
     mean_tbl(
       data = stem_social_psych,
       var_stem = c("belong_beoln", "identities")
-    ),
-    "Invalid 'var_stem' argument. 'var_stem' must be a character vector of length one."
-  )
-
-  expect_error(
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     mean_tbl(
-      data = depressive,
-      var_stem = "belong_beoln"
-    ),
-    "No columns were found with the variable stem: belong_beoln"
-  )
+      data = ex_mean_dat,
+      var_stem = "var"
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = "BELONG_belong",
+      ignore_stem_case = FALSE
+    )
+  })
 })
 
-test_that("Invalid 'only' argument", {
-  expect_error(
+test_that("Failure: Invalid 'var_input' argument", {
+  expect_snapshot(error = TRUE, {
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      var_input = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      var_input = "var_name"
+    )
+  })
+})
+
+test_that("Failure: Invalid 'only' argument", {
+  expect_snapshot(error = TRUE, {
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      only = character(0)
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     mean_tbl(
       data = stem_social_psych,
       var_stem = "belong_belong",
       only = NA
-    ),
-    "Invalid 'only' argument. 'only' must be a character vector of length at least one."
-  )
+    )
+  })
 })
 
+test_that("Failure: Invalid 'na_removal' argument", {
+  expect_snapshot(error = TRUE, {
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      na_removal = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      na_removal = "side-ways"
+    )
+  })
+})
 
 test_that("Expected output", {
   observed <-
@@ -76,19 +123,8 @@ test_that("Expected output", {
 })
 
 
-
-test_that("Expected output with 'ignore' values and ignore_stem_case", {
-  
-  expect_error(
-    mean_tbl(
-      data = stem_social_psych,
-      var_stem = "belong_BELONG",
-      ignore_stem_case = FALSE
-    ),
-    "No columns were found with the variable stem: belong_BELONG"
-  )
-  
-  observed <-
+test_that("Expected output with ignore_stem_case", {
+    observed <-
     mean_tbl(
       data = stem_social_psych,
       var_stem = "belong_BELONG",
@@ -144,8 +180,7 @@ test_that("Expected output with variable labels", {
   expect_equal(observed, expected)
 })
 
-
-test_that("Expected output with differnt 'only' types", {
+test_that("Expected output with different 'only' types", {
   observed1 <-
     mean_tbl(
       data = stem_social_psych,
@@ -183,12 +218,8 @@ test_that("Expected output with differnt 'only' types", {
       data = stem_social_psych,
       var_stem = "belong_belong",
       only = c("mean", "max")) |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = "mean",
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    dplyr::mutate(mean = round(mean, digits = 3))
+  
   
   expected3 <-
     tibble::tibble(
@@ -201,3 +232,99 @@ test_that("Expected output with differnt 'only' types", {
   expect_equal(observed2, expected2)
   expect_equal(observed3, expected3)
 })
+
+
+test_that("Expected output with two variable stems (listwise deletion)", {
+  observed1 <-
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = c("belong_belong", "identity_identityStem"),
+      only = c("mean", "sd")) |>
+    dplyr::mutate(
+      dplyr::across(
+        .cols = dplyr::all_of(c("mean", "sd")),
+        .fns = ~ round(., digits = 3)
+      )
+    )
+  
+  expected1 <-
+    tibble::tibble(
+      variable = c("belong_belongStem_w1", "belong_belongStem_w2", 
+                   "identity_identityStem_w1", "identity_identityStem_w2"),
+      mean = c(3.87, 3.97, 3.552, 3.607),
+      sd = c(0.980, 1.016, 1.095, 1.098),
+    )
+  
+  expect_equal(observed1, expected1)
+})
+
+
+test_that("Expected output with two variable names (listwise deletion)", {
+  observed1 <-
+    mean_tbl(
+      data = social_psy_data,
+      var_stem = c("belong_1", "identity_4"),
+      var_input = "name",
+      only = c("mean", "sd")) |>
+    dplyr::mutate(
+      dplyr::across(
+        .cols = dplyr::all_of(c("mean", "sd")),
+        .fns = ~ round(., digits = 3)
+      )
+    )
+  
+  expected1 <-
+    tibble::tibble(
+      variable = c("belong_1", "identity_4"),
+      mean = c(3.828, 2.716),
+      sd = c(1.097, 1.139)
+    )
+  
+  expect_equal(observed1, expected1)
+})
+
+
+test_that("Expected output with 'ignore' values set and multiple stems", {
+  observed <-
+    mean_tbl(
+      data = stem_social_psych,
+      var_stem = c("belong_belong", "selfEfficacy_passStemCourses"),
+      ignore = c(belong_belong = 1, selfEfficacy_passStemCourses = 5),
+      na_removal = "pairwise",
+      only = c("min", "max")
+    ) 
+  
+  expected <-
+    tibble::tibble(
+      variable = c("belong_belongStem_w1", "belong_belongStem_w2",
+                   "selfEfficacy_passStemCourses_w1", 
+                   "selfEfficacy_passStemCourses_w2"),
+      min = c(2,2,1,1),
+      max = c(5,5,4,4)
+    )
+  
+  expect_equal(observed, expected)
+})
+
+
+test_that("Expected output with 'ignore' values set and multiple names", {
+  observed <-
+    mean_tbl(
+      data = social_psy_data,
+      var_stem = c("identity_3", "selfEfficacy_5"),
+      var_input = "name",
+      ignore = c(identity_3 = 5, selfEfficacy_5 = 1),
+      na_removal = "pairwise",
+      only = c("min", "max")
+    ) 
+  
+  expected <-
+    tibble::tibble(
+      variable = c("identity_3", "selfEfficacy_5"),
+      min = c(1,2),
+      max = c(4,5)
+    )
+  
+  expect_equal(observed, expected)
+})
+

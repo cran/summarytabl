@@ -1,63 +1,166 @@
 # Test mean_group_tbl
 
-test_that("Invalid 'data' argument", {
-  expect_error(
+test_that("Failure: 'data' argument", {
+  expect_snapshot(error = TRUE, {
     mean_group_tbl(
       data = NULL,
       var_stem = "belong_outsiderStem",
       group = "_w\\d",
       group_type = "pattern"
-    ),
-    "The 'data' argument is not a data frame."
-  )
-
-  expect_error(
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     mean_group_tbl(
       data = data.frame(),
       var_stem = "belong_outsiderStem",
       group = "_w\\d",
       group_type = "pattern"
-    ),
-    "The 'data' argument is empty."
-  )
+    )
+  })
 })
 
-
-test_that("Invalid 'var_stem' argument and no columns found", {
-  expect_error(
+test_that("Failure: Invalid 'var_stem' argument", {
+  ex_mean_dat <- tibble::tibble(var_1 = 1:3, `var 2` = 5:7)
+  
+  expect_snapshot(error = TRUE, {
     mean_group_tbl(
       data = stem_social_psych,
       var_stem = c("belong_beoln", "identities"),
       group = "_w\\d",
       group_type = "pattern"
-    ),
-    "Invalid 'var_stem' argument. 'var_stem' must be a character vector of length one."
-  )
-
-  expect_error(
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     mean_group_tbl(
-      data = depressive,
-      var_stem = "belong_beoln",
-      group = "_w\\d",
+      data = ex_mean_dat,
+      var_stem = "var",
+      group = "\\d$",
       group_type = "pattern"
-    ),
-    "No columns were found with the variable stem: belong_beoln"
-  )
+    )
+  })
 })
 
-test_that("Invalid 'only' argument", {
-  expect_error(
+test_that("Failure: Invalid 'var_input' argument", {
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "\\d$",
+      group_type = "pattern",
+      var_input = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "\\d$",
+      group_type = "pattern",
+      var_input = "var_name"
+    )
+  })
+})
+
+test_that("Failure: Invalid 'group' argument", {
+  sample_mean_data <- 
+    data.frame(var_1 = 1:3, var_2 = 5:7, 
+               group = letters[1:3], 
+               group = letters[1:3],
+               check.names = FALSE)
+  
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = sample_mean_data,
+      var_stem = "var",
+      group = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "URMS",
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = sample_mean_data,
+      var_stem = "var",
+      group = "group"
+    )
+  })
+})
+
+test_that("Failure: Invalid 'group_type' argument", {
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "\\d$",
+      group_type = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "\\d$",
+      group_type = "patterning"
+    )
+  })
+})
+
+
+test_that("Failure: Invalid 'only' argument", {
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_outsiderStem",
+      group = "_w\\d",
+      group_type = "pattern",
+      only = character(0)
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     mean_group_tbl(
       data = stem_social_psych,
       var_stem = "belong_outsiderStem",
       group = "_w\\d",
       group_type = "pattern",
       only = NA
-    ),
-    "Invalid 'only' argument. 'only' must be a character vector of length at least one."
-  )
+    )
+  })
 })
 
+
+test_that("Failure: Invalid 'na_removal' argument", {
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_outsiderStem",
+      group = "_w\\d",
+      group_type = "pattern",
+      na_removal = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_outsiderStem",
+      group = "_w\\d",
+      group_type = "pattern",
+      na_removal = "side-wise"
+    )
+  })
+})
 
 test_that("Expected output for group pattern with specified group name", {
   observed <-
@@ -252,20 +355,7 @@ test_that("Expected output for group pattern and remove_group_non_alnum (TRUE/FA
 })
 
 
-
-test_that("Error and expected output with ignore_stem_case", {
-  expect_error(
-    mean_group_tbl(
-      data = stem_social_psych,
-      var_stem = "belong_OUTSIDERStem",
-      ignore_stem_case = FALSE,
-      group = "_w\\d",
-      group_type = "pattern"
-    ),
-    "No columns were found with the variable stem: belong_OUTSIDERStem."
-  )
-  
-  
+test_that("Expected output with ignore_stem_case", {
   observed1 <-
     mean_group_tbl(
       data = stem_social_psych,
@@ -296,18 +386,7 @@ test_that("Error and expected output with ignore_stem_case", {
 })
 
 
-test_that("Error and expected output with ignore_group_case", {
-  expect_error(
-    mean_group_tbl(
-      data = stem_social_psych,
-      var_stem = "belong_belongStem",
-      group = "IS_MALE",
-      group_type = "variable",
-      ignore_group_case = FALSE
-    ),
-    "The 'group' argument is not a column in 'data'."
-  )
-  
+test_that("Expected output with ignore_group_case", {
   observed1 <-
     mean_group_tbl(
       data = stem_social_psych,
@@ -339,7 +418,6 @@ test_that("Error and expected output with ignore_group_case", {
 
 
 test_that("Expected output with different 'only' types", {
-  
   observed1 <-
     mean_group_tbl(
       data = stem_social_psych,
@@ -347,12 +425,8 @@ test_that("Expected output with different 'only' types", {
       group = "is_male",
       only = c("mean", "min")
     ) |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = "mean",
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    dplyr::mutate(mean = round(mean, digits = 3))
+  
   
   expected1 <-
     tibble::tibble(
@@ -369,12 +443,8 @@ test_that("Expected output with different 'only' types", {
       group = "is_male",
       only = c("sd", "max")
     ) |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = "sd",
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    dplyr::mutate(sd = round(sd, digits = 3))
+  
   
   expected2 <-
     tibble::tibble(
@@ -391,12 +461,8 @@ test_that("Expected output with different 'only' types", {
       group = "is_male",
       only = c("mean", "nobs")
     ) |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = c(mean),
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    dplyr::mutate(mean = round(mean, digits = 3))
+  
   
   expected3 <-
     tibble::tibble(
@@ -410,4 +476,122 @@ test_that("Expected output with different 'only' types", {
   expect_equal(observed2, expected2)
   expect_equal(observed3, expected3)
 })
+
+
+test_that("Expected output with two variable stems where group is a variable (listwise deletion)", {
+  observed1 <-
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = c("belong_belong", "identity_identityStem"),
+      group = "urm",
+      only = c("mean", "sd")) |>
+    dplyr::mutate(
+      dplyr::across(
+        .cols = dplyr::all_of(c("mean", "sd")),
+        .fns = ~ round(., digits = 3)
+      )
+    )
+  
+  expected1 <-
+    tibble::tibble(
+      variable = c(rep(c("belong_belongStem_w1", "belong_belongStem_w2"), each = 2), 
+                   rep(c("identity_identityStem_w1", "identity_identityStem_w2"),
+                       each = 2)),
+      urm = rep(0:1, times = 4),
+      mean = c(3.862, 3.888, 3.952, 3.987,
+               3.601, 3.438, 3.686, 3.4),
+      sd = c(0.966, 1.031, 0.993, 1.073,
+             1.072, 1.157, 1.030, 1.228),
+    )
+  
+  expect_equal(observed1, expected1)
+})
+
+
+test_that("Expected output with two variable names where group is a variable (listwise deletion)", {
+  observed1 <-
+    mean_group_tbl(
+      data = social_psy_data,
+      var_stem = c("belong_1", "identity_4"),
+      var_input = "name",
+      group = "citizen",
+      only = c("mean", "sd")) |>
+    dplyr::mutate(
+      dplyr::across(
+        .cols = dplyr::all_of(c("mean", "sd")),
+        .fns = ~ round(., digits = 3)
+      )
+    )
+  
+  expected1 <-
+    tibble::tibble(
+      variable = rep(c("belong_1", "identity_4"), each = 4),
+      citizen = rep(1:4, times = 2),
+      mean = c(3.846, 3.763, 3.820, 3.639, 2.688, 
+               2.782, 2.765, 3.082),
+      sd = c(1.107, 0.968, 1.001, 1.2, 1.138,
+             1.121, 1.140, 1.167)
+    )
+  
+  expect_equal(observed1, expected1)
+})
+
+
+test_that("Expected output with 'ignore' values set, group is variable, and multiple stems", {
+  observed <-
+    mean_group_tbl(
+      data = stem_social_psych,
+      var_stem = c("belong_belong", "selfEfficacy_passStemCourses"),
+      group = "urm",
+      ignore = c(belong_belong = 1, selfEfficacy_passStemCourses = 5,
+                 urm = 0),
+      na_removal = "pairwise",
+      only = c("mean","min", "max")
+    ) |>
+    dplyr::mutate(mean = round(mean, digits = 3))
+  
+  expected <-
+    tibble::tibble(
+      variable = c("belong_belongStem_w1", "belong_belongStem_w2",
+                   "selfEfficacy_passStemCourses_w1", 
+                   "selfEfficacy_passStemCourses_w2"),
+      urm = 1,
+      mean = c(4.061, 4.190, 3.635, 3.784),
+      min = c(2,2,1,3),
+      max = c(5,5,4,4)
+    )
+  
+  expect_equal(observed, expected)
+})
+
+
+test_that("Expected output with 'ignore' values set, group is pattern, group_name is set, and multiple names", {
+  observed <-
+    mean_group_tbl(
+      data = social_psy_data,
+      var_stem = c("identity_3", "belong_1", "selfEfficacy_5"),
+      var_input = "name",
+      group = "_\\d",
+      group_type = "pattern",
+      group_name = "item_no",
+      ignore = c(identity_3 = 5, selfEfficacy_5 = 1),
+      na_removal = "pairwise",
+      only = c("mean")
+    ) |>
+    dplyr::mutate(mean = round(mean, digits = 3))
+  
+  expected <-
+    tibble::tibble(
+      variable = c("identity_3","belong_1", "selfEfficacy_5"),
+      item_no = c("3", "1", "5"),
+      mean = c(3.759, 3.827, 3.672)
+    )
+  
+  expect_equal(observed, expected)
+})
+
+
+
+
+
 

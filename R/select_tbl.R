@@ -1,41 +1,57 @@
 #' @title Summarize multiple response variables
 #'
-#' @description `select_tbl()` presents frequency counts and percentages 
-#' (count, percent) for binary (e.g., Unselected/Selected) and ordinal (e.g., 
-#' strongly disagree to strongly agree) variables with the same variable stem. 
-#' A variable stem is a common prefix found in related variable names, often 
-#' corresponding to similar survey items, that represents a shared concept before 
-#' unique identifiers (like time points) are added. For example, in the `stem_social_psych` 
-#' dataset, the two variables `belong_belongStem_w1` and `belong_belongStem_w2` 
-#' share the variable stem `belong_belongStem` (e.g., "I feel like an outsider in 
-#' STEM"), with suffixes (_w1, _w2) indicating different measurement waves. By 
-#' default, missing data are excluded from the calculations in a listwise fashion.
-#'
+#' @description `select_tbl()` displays frequency counts and percentages 
+#' for multiple response variables (e.g., a series of questions where 
+#' participants answer "Yes" or "No" to each item) as well as ordinal 
+#' variables (such as Likert or Likert-type items with responses ranging 
+#' from "Strongly Disagree" to "Strongly Agree", where respondents select 
+#' one response per statement, question, or item).
+#' 
 #' @param data A data frame.
-#' @param var_stem A character string of a variable stem or the full name of a variable 
-#' in `data`.
-#' @param escape_stem A logical value indicating whether to escape `var_stem`. Default 
-#' is `FALSE`.
-#' @param ignore_stem_case A logical value indicating whether the search for columns 
-#' matching the supplied `var_stem` is case-insensitive. Default is `FALSE`.
-#' @param na_removal A character string specifying how to remove missing values. Should 
-#' be one of `pairwise` or `listwise`. Default is `listwise`.
-#' @param pivot A character string specifying the format of the returned summary table.
-#' The default is `longer`, which returns the data in long format. To return the data in
-#' wide format, use `wider`.
-#' @param only A character string or vector of character strings of the kinds of summary 
-#' data to return. Default is `NULL`, which returns counts (count) and percentages (percent).
-#' @param var_labels An optional named character vector or list where each element maps
-#' labels to variable names. If any element is unnamed or if any labels do not match 
-#' variables in returned from `data`, all labels will be ignored and the table will be 
-#' printed without them.
-#' @param ignore An optional vector that contains values to exclude from the data. Default 
-#' is `NULL`, which includes all present values.
+#' @param var_stem A character vector with one or more elements, where each 
+#' represents either a variable stem or the complete name of a variable present 
+#' in `data`. A variable 'stem' refers to a common naming pattern shared among 
+#' related variables, typically reflecting repeated measures of the same idea 
+#' or a group of items assessing a single concept.
+#' @param var_input A character string specifying whether the values 
+#' supplied to `var_stem` should be treated as variable stems (`stem`) or 
+#' as complete variable names (`name`). By default, this is set to `stem`, 
+#' so the function searches for variables that begin with each stem provided. 
+#' Setting this argument to `name` directs the function to look for variables 
+#' that exactly match the provided names.
+#' @param regex_stem A logical value indicating whether to use Perl-compatible 
+#' regular expressions when searching for variable stems. Default is `FALSE`.
+#' @param ignore_stem_case A logical value indicating whether the search for 
+#' columns matching the supplied `var_stem` is case-insensitive. Default is 
+#' `FALSE`.
+#' @param na_removal A character string that specifies the method for handling 
+#' missing values: `pairwise` or `listwise`. Defaults to `listwise`.
+#' @param pivot A character string that determines the format of the table. By 
+#' default, `longer` returns the data in the long format. To receive the data in 
+#' the `wide` format, specify `wider`.
+#' @param only A character string or vector of character strings of the types of 
+#' summary data to return. Default is `NULL`, which returns both counts and 
+#' percentages. To return only counts or percentages, use `count` or `percent`, 
+#' respectively.
+#' @param var_labels An optional named character vector or list used to assign
+#' custom labels to variable names. Each element must be named and correspond 
+#' to a variable included in the returned table. If `var_input` is set to `stem`, 
+#' and any element is either unnamed or refers to a variable not present in the 
+#' table, all labels will be ignored and the table will be printed without them.
+#' @param ignore An optional named vector or list indicating values to exclude 
+#' from variables matching specified stems (or names). Defaults to `NULL`, 
+#' indicating that all values are retained. To specify exclusions for variables 
+#' identified by `var_stem`, use the corresponding stems or variable names as 
+#' names in the vector or list. To exclude multiple values from these variables, 
+#' supply them as a named list.
+#' @param force_pivot A logical value that enables pivoting to the 'wider' 
+#' format even when variables have inconsistent value sets. By default, this is 
+#' set to `FALSE` to prevent reshaping errors when values differ across variables 
+#' in the returned table. Set to `TRUE` to override this safeguard and pivot to 
+#' the 'wider' format regardless of value inconsistencies.
 #'
-#' @returns A tibble displaying frequency counts and/or percentages for each value of a 
-#' set of variables sharing the same variable stem. When the output is in the wider format, 
-#' columns beginning with `count_value` and `percent_value` prefixes report the count and 
-#' percentage, respectively, for each distinct response  value of the variable.
+#' @returns A tibble displaying the count and percentage for each category in a 
+#' multi-response variable.
 #'
 #' @author Ama Nyame-Mensah
 #'
@@ -76,124 +92,110 @@
 #' @export
 select_tbl <- function(data,
                        var_stem,
-                       escape_stem = FALSE,
+                       var_input = "stem",
+                       regex_stem = FALSE,
                        ignore_stem_case = FALSE,
                        na_removal = "listwise",
                        pivot = "longer",
                        only = NULL,
                        var_labels = NULL,
-                       ignore = NULL){
-
-  # Check 'data' is a data frame with at least one row/column
-  if (!is.data.frame(data)) {
-    stop("The 'data' argument is not a data frame.")
+                       ignore = NULL,
+                       force_pivot = FALSE) {
+  set_call()
+  on.exit({ .summarytabl$env <- NULL }, add = TRUE)
+  
+  args <- list(
+    data = data,
+    table_type = "select",
+    group_func = FALSE,
+    var_stem = var_stem,
+    var_label = "var_stem",
+    var_input = var_input,
+    valid_var_type = "valid_var_types",
+    regex_stem = regex_stem,
+    ignore_stem_case = ignore_stem_case,
+    na_removal = na_removal,
+    pivot = pivot,
+    only = only,
+    var_labels = var_labels,
+    ignore = ignore,
+    force_pivot = force_pivot
+  )
+  
+  checks <- check_select_args(args)
+  check_stems <- checks$var_stem
+  check_cols <- checks$cols
+  check_col_labels <- checks$col_labels
+  check_stem_map <- checks$var_stem_map
+  check_ignore <- checks$ignore
+  check_na_removal <- checks$na_removal
+  check_pivot <- checks$pivot
+  check_only <- checks$only
+  check_force_pivot <- checks$force_pivot
+  check_table_type <- checks$table_type
+  
+  data_sub <- checks$df[check_cols]
+  
+  ignore_result <-
+    extract_ignore_map(
+      vars = check_stems,
+      ignore = check_ignore,
+      var_stem_map = check_stem_map
+    )
+  ignore_map <- ignore_result$ignore_map
+  
+  if (!is.null(ignore_map)) {
+    cols_to_modify <- names(ignore_map)
+    data_sub[cols_to_modify] <- lapply(cols_to_modify, function(col) {
+      replace_with_na(data_sub[[col]], ignore_map[[col]])
+    })
   }
-
-  if (prod(dim(data)) == 0) {
-    stop("The 'data' argument is empty.")
+  
+  if (check_na_removal == "listwise") {
+    data_sub <- stats::na.omit(data_sub)
   }
-
-  # Check 'var_stem' is a character vector of length one
-  if (!is.character(var_stem) || length(var_stem) != 1) {
-    stop("Invalid 'var_stem' argument. 'var_stem' must be a character vector of length one.")
+  
+  select_tabl <- 
+    purrr::map(check_cols, ~ generate_select_tabl(data_sub, .x, check_na_removal)) |>
+    purrr::reduce(dplyr::bind_rows)
+  
+  if (check_pivot == "wider" && 
+      override_pivot(
+        tabl = select_tabl,
+        var_col = "variable",
+        values_col = "values",
+        allow_override = check_force_pivot)) {
+    select_tabl <- 
+        pivot_tbl_wider(
+          data = select_tabl,
+          id_cols = "variable",
+          names_from = "values",
+          names_glue = paste0("{.value}_value_{values}"),
+          values_from = c("count", "percent")
+        )
   }
-
-  # Find columns using 'var_stem'
-  cols <- find_columns(data = data,
-                       var_stem = var_stem,
-                       escape = escape_stem,
-                       ignore.case = ignore_stem_case)
-
-  # Check 'cols' is a character vector of length at least one
-  if (!is.character(cols) || length(cols) == 0) {
-    stop(paste0(sprintf("No columns were found with the variable stem: %s", var_stem),"."))
-  }
-
-  # Check 'na_removal' is a character vector of length one, and is one of 'listwise', 'pairwise'
-  if (!is.character(na_removal) || length(na_removal) != 1) {
-    stop("Invalid 'na_removal' argument. 'na_removal' must be a character vector of length one.")
-  }
-
-  if (!(na_removal %in% c("listwise", "pairwise"))) {
-    stop("Invalid 'na_removal' argument. 'na_removal' must be one of 'listwise', 'pairwise'.")
-  }
-
-  # Check 'pivot' is a character vector of length one, and is one of 'wider', 'longer'
-  if (!is.character(pivot) || length(pivot) != 1) {
-    stop("Invalid 'pivot' argument. 'pivot' must be a character vector of length one.")
-  }
-
-  if (!(pivot %in% c("wider", "longer"))) {
-    stop("Invalid 'pivot' argument. 'pivot' must be one of 'wider', 'longer'.")
-  }
-
-  # Check 'only'
-  if (is.null(only)) {
-    only <- only_type("select")
-  } else {
-    only <- tolower(trimws(only))
-  }
-
-  if (!(all(only %in% only_type("select"))) || length(only) == 0){
-    stop("Invalid 'only' argument. 'only' must be a character vector of length at least one.")
-  }
-
-  # Check 'var_labels' are valid otherwise return default (NULL)
-  if (!is.null(var_labels)) {
-    var_labels <- check_named_vctr(x = var_labels,
-                                   names = cols,
-                                   default = NULL)
-  }
-
-  # Remove values that are set to 'ignore'
-  if (!is.null(ignore) && is.vector(ignore) && length(ignore) > 0) {
-    data <-
-      data |>
-      dplyr::mutate(dplyr::mutate(dplyr::across(.cols = dplyr::all_of(cols) , 
-                                                .fns = ~ ifelse(. %in% ignore, NA, .)))
-      )
-  }
-
-  # Remove rows with NAs if requested listwise
-  if (na_removal == "listwise") {
-    data <- stats::na.omit(data[cols])
-  }
-
-  # Create table
-  select_tabl <-
-    purrr::map(.x = cols, .f = ~ generate_select_tabl(data, .x, na_removal)) |>
-    purrr::reduce(dplyr::bind_rows) |>
-    dplyr::select(variable, values, count, percent)
-
-  # Set data format: Wider / Longer
-  if (pivot == "wider") {
+  
+  if (!is.null(check_col_labels)) {
     select_tabl <-
       select_tabl |>
-        tidyr::pivot_wider(id_cols = variable,
-                           names_from = values,
-                           names_glue = "{.value}_value_{values}",
-                           values_from = c(count, percent))
-  }
-
-  # Add 'var_labels' if supplied
-  if (!is.null(var_labels)) {
-    select_tabl <-
-      select_tabl |>
-      dplyr::mutate(
-        variable_label = dplyr::case_match(variable,
-                                           !!! tbl_key(values_from = names(var_labels),
-                                                       values_to = unname(var_labels)),
-                                           .default = variable)
-      ) |>
+      dplyr::mutate(variable_label = dplyr::case_match(
+        variable,
+        !!!generate_tbl_key(
+          values_from = names(check_col_labels),
+          values_to = unname(check_col_labels)),
+        .default = variable
+      )) |>
       dplyr::relocate(variable_label, .after = variable)
   }
-
-  # Remove unrequested 'only' columns
-  select_tabl <- drop_only_cols(data = select_tabl,
-                                only = only,
-                                only_type = only_type("select"))
-
-  select_tabl
+  
+  select_tabl <-
+    drop_only_cols(
+      data = select_tabl,
+      only = check_only,
+      only_type = only_type(check_table_type)
+    )
+  
+  return(tibble::as_tibble(select_tabl))
 }
 
 #' @keywords internal
@@ -201,9 +203,12 @@ generate_select_tabl <- function(data, col, na_removal) {
   data |>
     dplyr::group_by(.data[[col]]) |>
     dplyr::summarize(count = dplyr::n()) |>
+    dplyr::ungroup() |> 
     dplyr::filter(if (na_removal == "pairwise") !is.na(.data[[col]]) else TRUE) |>
-    dplyr::mutate(variable = col,
-                  percent = count / sum(count)) |>
-    dplyr::ungroup() |>
-    dplyr::rename(values = 1)
+    dplyr::mutate(
+      variable = col,
+      percent = count / sum(count)
+    ) |>
+    dplyr::rename(values = 1) |>
+    dplyr::select(variable, values, count, percent)
 }

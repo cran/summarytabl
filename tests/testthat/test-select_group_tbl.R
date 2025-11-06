@@ -1,111 +1,189 @@
 # Test select_group_tbl
 
-test_that("Invalid 'data' argument", {
-  expect_error(
+test_that("Failure: 'data' argument", {
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
       data = NULL,
-      var_stem = "dep"
-    ),
-    "The 'data' argument is not a data frame."
-  )
-
-  expect_error(
+      var_stem = "dep",
+      group = "_\\d"
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
       data = data.frame(),
       var_stem = "dep",
       group = "sex",
       group_type = "variable"
-    ),
-    "The 'data' argument is empty."
-  )
+    )
+  })
 })
 
-
-test_that("Invalid 'var_stem' argument and No 'cols' found", {
-  expect_error(
+test_that("Failure: Invalid 'var_stem' argument", {
+  ex_mean_dat <- tibble::tibble(var_1 = 1:3, `var 2` = 5:7)
+  
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = depressive,
+      var_stem = NA,
+      group = "sex",
+      group_type = "variable"
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
       data = depressive,
       var_stem = c("dep", "gender"),
       group = "sex",
       group_type = "variable"
-    ),
-    "Invalid 'var_stem' argument. 'var_stem' must be a character vector of length one."
-  )
-
-  expect_error(
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
-      data = depressive,
-      var_stem = "depress",
-      group = "sex",
+      data = stem_social_psych,
+      var_stem = "BELONG_belong",
+      ignore_stem_case = FALSE,
+      group = "urm",
       group_type = "variable"
-    ),
-    "No columns were found with the variable stem: depress."
-  )
+    )
+  })
 })
 
-
-test_that("Invalid 'na_removal' argument", {
-  expect_error(
+test_that("Failure: Invalid 'var_input' argument", {
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
-      data = depressive,
-      var_stem = "dep",
-      group = "sex",
-      group_type = "variable",
-      na_removal = 123
-    ),
-    "Invalid 'na_removal' argument. 'na_removal' must be a character vector of length one."
-  )
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      var_input = NULL,
+      group = "urm"
+    )
+  })
   
-  expect_error(
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
-      data = depressive,
-      var_stem = "dep",
-      group = "sex",
-      group_type = "variable",
-      na_removal = "sidewise"
-    ),
-    "Invalid 'na_removal' argument. 'na_removal' must be one of 'listwise', 'pairwise'."
-  )
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      var_input = "var_name",
+      group = "urm"
+    )
+  })
 })
 
-test_that("Invalid 'pivot' argument", {
-  expect_error(
-    select_group_tbl(
-      data = depressive,
-      var_stem = "dep",
-      group = "sex",
-      group_type = "variable",
-      pivot = 1234
-    ),
-    "Invalid 'pivot' argument. 'pivot' must be a character vector of length one."
-  )
+test_that("Failure: Invalid 'group' argument", {
+  sample_select_data <- 
+    data.frame(var_1 = 1:3, var_2 = 5:7, 
+               group = letters[1:3], 
+               group = letters[1:3],
+               check.names = FALSE)
   
-  expect_error(
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
-      data = depressive,
-      var_stem = "dep",
-      group = "sex",
-      group_type = "variable",
-      pivot = "sidewise"
-    ),
-    "Invalid 'pivot' argument. 'pivot' must be one of 'wider', 'longer'."
-  )
+      data = sample_select_data,
+      var_stem = "var",
+      group = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "URMS",
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = sample_select_data,
+      var_stem = "var",
+      group = "group"
+    )
+  })
+})
+
+test_that("Failure: Invalid 'group_type' argument", {
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "\\d$",
+      group_type = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "\\d$",
+      group_type = "patterning"
+    )
+  })
 })
 
 
-test_that("Invalid 'only' argument", {
-  expect_error(
+test_that("Failure: Invalid 'only' argument", {
+  expect_snapshot(error = TRUE, {
     select_group_tbl(
-      data = depressive,
-      var_stem = "dep",
-      group = "sex",
-      group_type = "variable",
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "urm",
+      only = character(0)
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "urm",
       only = NA
-    ),
-    "Invalid 'only' argument. 'only' must be a character vector of length at least one."
-  )
+    )
+  })
 })
 
+test_that("Failure: Invalid 'na_removal' argument", {
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "urm",
+      na_removal = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "urm",
+      na_removal = "side-ways"
+    )
+  })
+})
+
+
+test_that("Failure: Invalid 'pivot' argument", {
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "urm",
+      pivot = NULL
+    )
+  })
+  
+  expect_snapshot(error = TRUE, {
+    select_group_tbl(
+      data = stem_social_psych,
+      var_stem = "belong_belong",
+      group = "urm",
+      pivot = "side_ways"
+    )
+  })
+})
 
 test_that("Expected output longer format", {
   observed <-
@@ -113,15 +191,11 @@ test_that("Expected output longer format", {
       data = depressive,
       var_stem = "dep",
       group = "sex",
-      group_type = "variable"
+      group_type = "variable",
+      margins = "rows"
     ) |>
     head() |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = "percent",
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    dplyr::mutate(percent = round(percent, digits = 3))
 
   expected <-
     tibble::tibble(
@@ -146,18 +220,20 @@ test_that("Expected output wider format", {
       group_type = "variable",
       pivot = "wider",
       only = "count"
-    )[1:2,]
+    )
+  observed <- observed[1:3,]
   
   expected <-
     tibble::tibble(
-      variable = rep("dep_1", times = 2),
-      sex = 1:2,
-      count_value_1 = c(55, 54),
-      count_value_2 = c(325,364),
-      count_value_3 = c(440,369)
+      variable = rep("dep_1", times = 3),
+      values = 1:3L,
+      count_sex_1 = c(55, 325, 440),
+      count_sex_2 = c(54, 364, 369)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("sex", "count_value_1", "count_value_2", "count_value_3")),
-                                .fns = as.integer))
+    dplyr::mutate(dplyr::across(
+      .cols = dplyr::all_of(c("values", "count_sex_1", "count_sex_2")),
+      .fns = as.integer)
+      )
   
   expect_equal(observed, expected)
 })
@@ -182,19 +258,20 @@ test_that("Expected output wider format with variable labels", {
         dep_7="how often child feels excited about something",
         dep_8="how often child feels too busy to get everything"
       )
-    )[1:2,]
+    )[1:3,]
   
   expected <-
     tibble::tibble(
-      variable = rep("dep_1", times = 2),
+      variable = rep("dep_1", times = 3),
       variable_label = "how often child feels sad and blue",
-      sex = 1:2,
-      count_value_1 = c(55, 54),
-      count_value_2 = c(325,364),
-      count_value_3 = c(440,369)
+      values = 1:3L,
+      count_sex_1 = c(55, 325, 440),
+      count_sex_2 = c(54, 364, 369)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("sex", "count_value_1", "count_value_2", "count_value_3")),
-                                .fns = as.integer))
+    dplyr::mutate(dplyr::across(
+      .cols = dplyr::all_of(c("values", "count_sex_1", "count_sex_2")),
+      .fns = as.integer)
+      )
   
   expect_equal(observed, expected)
 })
@@ -220,27 +297,21 @@ test_that("Expected output wider for with 'ignore' values", {
         dep_7="how often child feels excited about something",
         dep_8="how often child feels too busy to get everything"
       )
-    )
+    ) |> head()
   
   expected <-
     tibble::tibble(
-      variable = paste0("dep_", 1:8),
-      variable_label = c(
-        "how often child feels sad and blue",
-        "how often child feels nervous, tense, or on edge",
-        "how often child feels happy",
-        "how often child feels bored",
-        "how often child feels lonely",
-        "how often child feels tired or worn out",
-        "how often child feels excited about something",
-        "how often child feels too busy to get everything"
-      ),
-      sex = 1,
-      count_value_2 = c(41, 42, 59, 63, 37, 50, 59, 43),
-      count_value_3 = c(26, 25, 8, 4, 30, 17, 8, 24)
+      variable = rep(paste0("dep_", 1:3), each = 2),
+      variable_label = rep(c("how often child feels sad and blue",
+                             "how often child feels nervous, tense, or on edge",
+                             "how often child feels happy"), each  = 2),
+      values = rep(2:3L, times = 3),
+      count_sex_1 = c(41, 26, 42, 25, 59, 8),
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("sex", "count_value_2", "count_value_3")),
-                                .fns = as.integer))
+    dplyr::mutate(dplyr::across(
+      .cols = dplyr::all_of(c("values", "count_sex_1")),
+      .fns = as.integer
+      ))
   
   expect_equal(observed, expected)
 })
@@ -256,21 +327,17 @@ test_that("Expected output with remove_group_non_alnum", {
       group_type = "pattern",
       remove_group_non_alnum = FALSE
     ) |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = "percent",
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    head() |>
+    dplyr::mutate(percent = round(percent, digits = 3))
     
   expected1 <-
     tibble::tibble(
-      variable = rep(c("belong_belongStem_w1", "belong_belongStem_w2"), each = 5),
-      group = rep(c("_w1", "_w2"), each = 5),
-      values = rep(1:5, times = 2),
-      count = c(5, 20, 59, 107, 79, 11, 11, 44, 113, 91),
-      percent = c(0.019, 0.074, 0.219, 0.396, 0.293, 0.041,
-                  0.041, 0.163, 0.419, 0.337)
+      variable = c(rep("belong_belongStem_w1", times = 5), 
+                   "belong_belongStem_w2"),
+      group = c(rep("_w1", times = 5), "_w2"),
+      values = c(1:5L, 1L),
+      count = c(5, 20, 59, 107, 79, 11),
+      percent = c(0.019, 0.074, 0.219, 0.396, 0.293, 0.041)
     )
   
   observed2 <-
@@ -281,21 +348,17 @@ test_that("Expected output with remove_group_non_alnum", {
       group_type = "pattern",
       remove_group_non_alnum = TRUE
     ) |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = "percent",
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    head() |>
+    dplyr::mutate(percent = round(percent, digits = 3))
   
   expected2 <-
     tibble::tibble(
-      variable = rep(c("belong_belongStem_w1", "belong_belongStem_w2"), each = 5),
-      group = rep(c("w1", "w2"), each = 5),
-      values = rep(1:5, times = 2),
-      count = c(5, 20, 59, 107, 79, 11, 11, 44, 113, 91),
-      percent = c(0.019, 0.074, 0.219, 0.396, 0.293, 0.041,
-                  0.041, 0.163, 0.419, 0.337)
+      variable = c(rep("belong_belongStem_w1", times = 5), 
+                   "belong_belongStem_w2"),
+      group = c(rep("w1", times = 5), "w2"),
+      values = c(1:5L, 1L),
+      count = c(5, 20, 59, 107, 79, 11),
+      percent = c(0.019, 0.074, 0.219, 0.396, 0.293, 0.041)
     )
   
   expect_equal(observed1, expected1)
@@ -303,21 +366,7 @@ test_that("Expected output with remove_group_non_alnum", {
 })
 
 
-test_that("Error and expected output with ignore_stem_case", {
-  
-  expect_error(
-    select_group_tbl(
-      data = depressive,
-      var_stem = "DEP",
-      ignore_stem_case = FALSE,
-      group = "sex",
-      group_type = "variable",
-      pivot = "wider",
-      only = "count"
-    ),
-    "No columns were found with the variable stem: DEP."
-  )
-  
+test_that("Expected output with ignore_stem_case", {
   observed <-
     select_group_tbl(
       data = depressive,
@@ -332,34 +381,19 @@ test_that("Error and expected output with ignore_stem_case", {
   expected <-
     tibble::tibble(
       variable = rep("dep_1", times = 2),
-      sex = 1:2,
-      count_value_1 = c(55, 54),
-      count_value_2 = c(325,364),
-      count_value_3 = c(440,369)
+      values = 1:2,
+      count_sex_1 = c(55, 325),
+      count_sex_2 = c(54,364)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("sex", "count_value_1", "count_value_2", "count_value_3")),
-                                .fns = as.integer))
+    dplyr::mutate(dplyr::across(
+      .cols = dplyr::all_of(c("values", "count_sex_1","count_sex_2")),
+      .fns = as.integer)
+      )
   
   expect_equal(observed, expected)
 })
 
-
-
-test_that("Error and expected output with ignore_group_case", {
-  
-  expect_error(
-    select_group_tbl(
-      data = depressive,
-      var_stem = "dep",
-      group = "SEX",
-      group_type = "variable",
-      ignore_group_case = FALSE,
-      pivot = "wider",
-      only = "count"
-    ),
-    "The 'group' argument is not a column in 'data'."
-  )
-  
+test_that("Expected output with ignore_group_case", {
   observed <-
     select_group_tbl(
       data = depressive,
@@ -375,17 +409,17 @@ test_that("Error and expected output with ignore_group_case", {
   expected <-
     tibble::tibble(
       variable = rep("dep_1", times = 2),
-      sex = 1:2,
-      count_value_1 = c(55, 54),
-      count_value_2 = c(325,364),
-      count_value_3 = c(440,369)
+      values = 1:2,
+      count_sex_1 = c(55, 325),
+      count_sex_2 = c(54,364)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("sex", "count_value_1", "count_value_2", "count_value_3")),
-                                .fns = as.integer))
+    dplyr::mutate(dplyr::across(
+      .cols = dplyr::all_of(c("values","count_sex_1", "count_sex_2")),
+      .fns = as.integer)
+      )
   
   expect_equal(observed, expected)
 })
-
 
 test_that("Expected output with different 'only' types", {
   observed1 <-
@@ -400,26 +434,26 @@ test_that("Expected output with different 'only' types", {
   expected1 <-
     tibble::tibble(
       variable = "dep_1",
-      sex = rep(1:2, times = 3),
-      values = rep(1:3, each = 2),
-      count = c(55, 54, 325, 364, 440, 369)
+      sex = rep(1:2, each = 3),
+      values = rep(1:3, times = 2),
+      count = c(55, 325, 440, 54, 364, 369)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("sex", "values")),.fns = as.integer))
+    dplyr::mutate(dplyr::across(
+      .cols = dplyr::all_of(c("sex", "values")),
+      .fns = as.integer)
+      )
   
   observed2 <-
     select_group_tbl(
       data = depressive,
       var_stem = "dep",
       group = "sex",
-      only = "percent"
+      only = "percent",
+      margins = "rows"
     ) |>
     head() |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = dplyr::all_of("percent"),
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    dplyr::mutate(percent = round(percent, digits = 3))
+  
   
   expected2 <-
     tibble::tibble(
@@ -428,7 +462,10 @@ test_that("Expected output with different 'only' types", {
       values = rep(1:3, each = 2),
       percent = c(0.505, 0.495, 0.472, 0.528, 0.544, 0.456)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("sex", "values")),.fns = as.integer))
+    dplyr::mutate(dplyr::across(
+      .cols = dplyr::all_of(c("sex", "values")),
+      .fns = as.integer)
+      )
   
   expect_equal(observed1, expected1)
   expect_equal(observed2, expected2)
@@ -449,11 +486,11 @@ test_that("Expected output with specified group name", {
   expected1 <-
     tibble::tibble(
       variable = "dep_1",
-      gender_identity = rep(1:2, times = 3),
-      values = rep(1:3, each = 2),
-      count = c(55, 54, 325, 364, 440, 369)
+      gender_identity = rep(1:2, each = 3),
+      values = rep(1:3, times = 2),
+      count = c(55, 325, 440, 54, 364, 369)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = "values",.fns = as.integer))
+    dplyr::mutate(values = as.integer(values))
   
   observed2 <-
     select_group_tbl(
@@ -465,12 +502,7 @@ test_that("Expected output with specified group name", {
       only = "percent"
     ) |>
     head() |>
-    dplyr::mutate(
-      dplyr::across(
-        .cols = "percent",
-        .fns = ~ round(., digits = 3)
-      )
-    )
+    dplyr::mutate(percent = round(percent, digits = 3))
   
   expected2 <-
     tibble::tibble(
@@ -479,8 +511,95 @@ test_that("Expected output with specified group name", {
       values = rep(1:3, times = 2),
       percent = c(0.068, 0.429, 0.503, 0.090, 0.464, 0.446)
     ) |>
-    dplyr::mutate(dplyr::across(.cols = dplyr::all_of(c("values")),.fns = as.integer))
+    dplyr::mutate(values = as.integer(values))
+  
   
   expect_equal(observed1, expected1)
   expect_equal(observed2, expected2)
+})
+
+
+test_that("Expected output with multiple names, group is pattern (digits), and ignore values (pairwise deletion)", {
+  observed <-
+    select_group_tbl(
+      data = depressive,
+      var_stem = c("dep_1", "dep_5"),
+      group = "\\d",
+      group_type = "pattern",
+      var_input = "name",
+      na_removal = "pairwise",
+      only = "count",
+      ignore = c(dep_1 = 3, dep_5 = 2))
+  
+  expected <-
+    tibble::tibble(
+      variable = rep(c("dep_1", "dep_5"), each = 2),
+      group = as.character(c(1,1,5,5)),
+      values = as.integer(c(1,2,1,3)),
+      count = as.integer(c(120, 709, 206, 871))
+    )
+  
+  expect_equal(observed, expected)
+})
+
+
+test_that("Expected output with multiple variable stems, group is a variable, and ignore values (pairwise deletion)", {
+  observed <-
+    select_group_tbl(
+      data = social_psy_data,
+      var_stem = c("belong", "identity"),
+      group = "gender",
+      na_removal = "pairwise",
+      only = "count",
+      ignore = list(belong = c(1,2,3), identity = c(3, 4,5),
+                    gender = c(4,5,6))) |>
+    tail()
+  
+  expected <-
+    tibble::tibble(
+      variable = "identity_4",
+      gender = rep(1:3, each = 2),
+      values = as.integer(rep(1:2, times = 3)),
+      count = as.integer(c(323, 1041, 1027,2014, 5, 11))
+    )
+  
+  expect_equal(observed, expected)
+})
+
+
+test_that("Expected output with multiple variable names, group is variable, and ignore values (pairwise deletion)", {
+  observed <-
+    select_group_tbl(
+      data = social_psy_data,
+      var_stem = c("belong_1", "selfEfficacy_1"),
+      group = "gender",
+      na_removal = "pairwise",
+      only = "count",
+      ignore = list(belong_1 = c(1,2,3), selfEfficacy_1 = c(3, 4,5),
+                    gender = c(4,5,6)))
+  
+  expected <-
+    tibble::tibble(
+      variable = rep(c("belong_1", "selfEfficacy_1"), each = 6),
+      gender = rep(rep(1:3, each = 2), times = 2),
+      values = c(rep(4:5, times = 3), rep(1:2, times = 3)),
+      count = as.integer(c(1136, 560,2115,2442, 18, 9,
+                           79, 238, 62, 251, 2, 6))
+    )
+  
+  expect_equal(observed, expected)
+})
+
+
+test_that("Warning: override pivot wider", {
+  expect_snapshot(error = FALSE, {
+    select_group_tbl(
+      data = social_psy_data,
+      var_stem = c("belong", "identity"),
+      group = "gender",
+      na_removal = "pairwise",
+      only = "count",
+      pivot = "wider",
+      ignore = list(belong = c(1,2,3), identity = c(3,4,5)))
+  })
 })

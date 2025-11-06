@@ -2,17 +2,18 @@
 % Please edit documentation in R/mean_group_tbl.R
 \name{mean_group_tbl}
 \alias{mean_group_tbl}
-\title{Summarize continuous variables by group}
+\title{Summarize multiple response variables by group or pattern}
 \usage{
 mean_group_tbl(
   data,
   var_stem,
   group,
-  escape_stem = FALSE,
+  var_input = "stem",
+  regex_stem = FALSE,
   ignore_stem_case = FALSE,
   group_type = "variable",
   group_name = NULL,
-  escape_group = FALSE,
+  regex_group = FALSE,
   ignore_group_case = FALSE,
   remove_group_non_alnum = TRUE,
   na_removal = "listwise",
@@ -24,103 +25,115 @@ mean_group_tbl(
 \arguments{
 \item{data}{A data frame.}
 
-\item{var_stem}{A character string of a variable stem or the full name of a variable in
-\code{data}.}
+\item{var_stem}{A character vector with one or more elements, where each
+represents either a variable stem or the complete name of a variable present
+in \code{data}. A variable 'stem' refers to a common naming pattern shared among
+related variables, typically reflecting repeated measures of the same idea
+or a group of items assessing a single concept.}
 
-\item{group}{A character string of a variable in \code{data} or a pattern to use to search for
-variables in \code{data}.}
+\item{group}{A character string representing a variable name or a pattern
+used to search for variables in \code{data}.}
 
-\item{escape_stem}{A logical value indicating whether to escape \code{var_stem}. Default is
+\item{var_input}{A character string specifying whether the values supplied
+to \code{var_stem} should be treated as variable stems (\code{stem}) or as complete
+variable names (\code{name}). By default, this is set to \code{stem}, so the function
+searches for variables that begin with each stem provided. Setting this
+argument to \code{name} directs the function to look for variables that exactly
+match the provided names.}
+
+\item{regex_stem}{A logical value indicating whether to use Perl-compatible
+regular expressions when searching for variable stems. Default is \code{FALSE}.}
+
+\item{ignore_stem_case}{A logical value indicating whether the search for
+columns matching the supplied \code{var_stem} is case-insensitive. Default is
 \code{FALSE}.}
 
-\item{ignore_stem_case}{A logical value indicating whether the search for columns matching
-the supplied \code{var_stem} is case-insensitive. Default is \code{FALSE}.}
+\item{group_type}{A character string that defines how the \code{group} argument
+should be interpreted. Should be one of \code{pattern} or \code{variable}. Defaults
+to \code{variable}, which searches for a matching variable name in \code{data}.}
 
-\item{group_type}{A character string that defines the type of grouping variable. Should be
-one of \code{pattern} or \code{variable}. Default is \code{variable}, in which case the variable matching the
-\code{group} string will be searched for within \code{data}.}
+\item{group_name}{An optional character string used to rename the \code{group}
+column in the final table When \code{group_type} is set to \code{variable}, the column
+name defaults to the matched variable name from \code{data}. When set to \code{pattern},
+the default column name is \code{group}.}
 
-\item{group_name}{A character string piped to the final table to replace the name of \code{group}.}
+\item{regex_group}{A logical value indicating whether to use Perl-compatible
+regular expressions when searching for \code{group} variables or matching variable
+name patterns. Default is \code{FALSE}.}
 
-\item{escape_group}{A logical value indicating whether to escape string supplied to \code{group}.}
+\item{ignore_group_case}{A logical value specifying whether the search for a
+grouping variable (if \code{group_type} is \code{variable}) or for variables matching a
+pattern (if \code{group_type} is \code{pattern}) should be case-insensitive. Default is
+\code{FALSE}. Set to \code{TRUE} to ignore case.}
 
-\item{ignore_group_case}{A logical value indicating whether \code{group} is case-insensitive.
-Default is \code{FALSE}.}
+\item{remove_group_non_alnum}{A logical value indicating whether to remove
+all non-alphanumeric characters (i.e., anything that is not a letter or
+number) from \code{group}. Default is \code{TRUE}.}
 
-\item{remove_group_non_alnum}{A logical value indicating whether to remove all non-
-alphanumeric characters (anything that is not a letter or number) from \code{group}. Default
-is \code{TRUE}.}
-
-\item{na_removal}{A character string specifying how to remove missing values. Should be
-one of \code{pairwise} or \code{listwise}. Default is \code{listwise}.}
+\item{na_removal}{A character string that specifies the method for handling
+missing values: \code{pairwise} or \code{listwise}. Defaults to \code{listwise}.}
 
 \item{only}{A character string or vector of character strings of the types of
-summary data to return. Default is \code{NULL}, which returns mean (mean), standard
-deviation (sd), minimum value (min), maximum value (max), and non-missing responses
-(nobs).}
+summary data to return. Default is \code{NULL}, which returns both counts and
+percentages. To return only counts or percentages, use \code{count} or \code{percent},
+respectively.}
 
-\item{var_labels}{An optional named character vector or list where each element maps
-labels to variable names. If any element is unnamed or if any labels do not match
-variables in returned from \code{data}, all labels will be ignored and the table will be
-printed without them.}
+\item{var_labels}{An optional named character vector or list used to assign
+custom labels to variable names. Each element must be named and correspond
+to a variable included in the returned table. If \code{var_input} is set to \code{stem},
+and any element is either unnamed or refers to a variable not present in the
+table, all labels will be ignored and the table will be printed without them.}
 
-\item{ignore}{An optional named vector or list specifying values to exclude from the
-dataset and analysis. By default, \code{NULL} includes all available values. To omit values
-from variables returned by \code{var_stem}, use the provided stem as the name. To exclude
-values from both \code{var_stem} variables and a grouping variable in \code{data}, supply a list.}
+\item{ignore}{An optional named vector or list indicating values to exclude
+from variables matching specified stems (or names), and, if applicable, from
+a grouping variable in \code{data}. Defaults to \code{NULL}, indicating that all values
+are retained. To specify exclusions for variables identified by \code{var_stem},
+use the corresponding stems or variable names as names in the vector or list.
+To exclude multiple values from these variables or a grouping variable, supply
+them as a named list.}
 }
 \value{
-A tibble presenting summary statistics (e.g., mean, standard deviation, minimum
-value, maximum, number of non-missing observations) for a set of variables sharing the same
-variable stem. The results are grouped by either a grouping variable in the data or by a
-pattern matched with variable names.
+A tibble showing summary statistics for continuous variables, grouped
+either by a specified variable in the dataset or by matching patterns in variable
+names.
 }
 \description{
-\code{mean_group_tbl()} presents descriptive statistics (mean, sd, minimum,
-maximum, number of non-missing observations) for interval (e.g., Test scores) and
-ratio level (e.g., Age) variables with the same variable stem by some grouping variable.
-A variable stem is a common prefix found in related variable names, often corresponding
-to similar survey items, that represents a shared concept before unique identifiers (like
-time points) are added. For example, in the \code{stem_social_psych} dataset, the two variables
-'belong_belongStem_w1' and 'belong_belongStem_w2' share the variable stem 'belong_belongStem'
-(e.g., "I feel like an outsider in STEM"), with suffixes (_w1, _w2) indicating different
-measurement waves. By default, missing data are excluded from the calculations in a listwise
-fashion.
+\code{mean_group_tbl()} calculates summary statistics (i.e.,
+mean, standard deviation, minimum, maximum, and count of non-missing
+values) for continuous (i.e., interval and ratio-level) variables,
+grouped either by another variable in your dataset or by a matched
+pattern in the variable names.
 }
 \examples{
-mean_group_tbl(data = stem_social_psych,
-               var_stem = "belong_welcomedStem",
-               group = "_w\\\\d",
-               group_type = "pattern",
-               na_removal = "pairwise",
-               var_labels = c(belong_welcomedStem_w1 = "I feel welcomed in STEM workplaces",
-                              belong_welcomedStem_w2 = "I feel welcomed in STEM workplaces"),
-               group_name = "wave")
+sdoh_child_ages_region <- 
+  dplyr::select(sdoh, c(REGION, ACS_PCT_AGE_0_4, ACS_PCT_AGE_5_9,
+                        ACS_PCT_AGE_10_14, ACS_PCT_AGE_15_17))
 
-mean_group_tbl(data = social_psy_data,
-               var_stem = "belong",
-               group = "gender",
-               group_type = "variable",
+mean_group_tbl(data = sdoh_child_ages_region,
+               var_stem = "ACS_PCT_AGE",
+               group = "REGION",
+               group_name = "us_region",
                na_removal = "pairwise",
-               var_labels = c(belong_1 = "I feel like I belong at this institution",
-                              belong_2 = "I  feel like part of the community",
-                              belong_3 = "I feel valued by this institution"),
-               group_name = "gender_identity")
+               var_labels = c(
+                 ACS_PCT_AGE_0_4 = "\% of population between ages 0-4",
+                 ACS_PCT_AGE_5_9 = "\% of population between ages 5-9",
+                 ACS_PCT_AGE_10_14 = "\% of population between ages 10-14",
+                 ACS_PCT_AGE_15_17 = "\% of population between ages 15-17"))
 
+set.seed(0222)
 grouped_data <-
   data.frame(
-    symptoms.t1 = sample(c(1:5, -999), replace = TRUE, size = 50),
-    symptoms.t2 = sample(c(NA, 1:5, -999), replace = TRUE, size = 50)
+    symptoms.t1 = sample(c(0:10, -999), replace = TRUE, size = 50),
+    symptoms.t2 = sample(c(NA, 0:10, -999), replace = TRUE, size = 50)
   )
 
 mean_group_tbl(data = grouped_data,
                var_stem = "symptoms",
                group = ".t\\\\d",
                group_type = "pattern",
-               escape_group = TRUE,
                na_removal = "listwise",
                ignore = c(symptoms = -999))
-               
+
 }
 \author{
 Ama Nyame-Mensah

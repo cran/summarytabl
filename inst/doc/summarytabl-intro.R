@@ -7,71 +7,62 @@ cat_tbl(data = nlsy, var = "race")
 ## -----------------------------------------------------------------------------
 cat_tbl(data = nlsy, 
         var = "race",
-        ignore = "Black",
+        ignore = "Hispanic",
         na.rm = TRUE)
 
 ## -----------------------------------------------------------------------------
-# Default: counts and percentages
-cat_group_tbl(data = nlsy,
+nlsy_cross_tab <- 
+  nlsy |>
+  dplyr::select(c(race, bthwht)) |>
+  dplyr::mutate(bthwht = ifelse(bthwht == 0, "regular_bithweight", "low_birthweight")) 
+
+cat_group_tbl(data = nlsy_cross_tab,
               row_var = "race",
-              col_var = "bthwht",
-              na.rm.row_var = TRUE)
-
-# Counts only
-cat_tbl(data = nlsy, 
-        var = "race",
-        ignore = "Black",
-        na.rm = TRUE,
-        only = "count")
-
-# Percents only
-cat_group_tbl(data = nlsy,
-              row_var = "race",
-              col_var = "bthwht",
-              na.rm.row_var = TRUE,
-              only = "percent")
-
-## -----------------------------------------------------------------------------
-cat_group_tbl(data = nlsy,
-              row_var = "gender",
               col_var = "bthwht")
 
 ## -----------------------------------------------------------------------------
-cat_group_tbl(data = nlsy,
+cat_group_tbl(data = nlsy_cross_tab,
               row_var = "race",
               col_var = "bthwht",
-              na.rm.row_var = TRUE,
-              ignore = c(race = "Non-Black,Non-Hispanic"),
               pivot = "wider")
 
 ## -----------------------------------------------------------------------------
-cat_group_tbl(data = nlsy,
+# Default: percentages across the full table sum to one
+cat_group_tbl(data = nlsy_cross_tab,
               row_var = "race",
               col_var = "bthwht",
-              na.rm.row_var = TRUE,
-              ignore = list(race = c("Non-Black,Non-Hispanic", "Hispanic")),
-              pivot = "wider")
-
-## -----------------------------------------------------------------------------
-# Default: counts and percentages
-cat_group_tbl(data = nlsy,
-              row_var = "race",
-              col_var = "bthwht",
-              na.rm.row_var = TRUE)
-
-# Counts only
-cat_group_tbl(data = nlsy,
-              row_var = "race",
-              col_var = "bthwht",
-              na.rm.row_var = TRUE,
-              only = "count")
-
-# Percents only
-cat_group_tbl(data = nlsy,
-              row_var = "race",
-              col_var = "bthwht",
-              na.rm.row_var = TRUE,
+              pivot = "wider",
               only = "percent")
+
+# Rowwise: percentages sum to one across columns within each row
+cat_group_tbl(data = nlsy_cross_tab,
+              row_var = "race",
+              col_var = "bthwht",
+              margins = "rows",
+              pivot = "wider",
+              only = "percent")
+
+# Columnwise: percentages within each column sum to one
+cat_group_tbl(data = nlsy_cross_tab,
+              row_var = "race",
+              col_var = "bthwht",
+              margins = "columns",
+              pivot = "wider",
+              only = "percent")
+
+## -----------------------------------------------------------------------------
+cat_group_tbl(data = nlsy_cross_tab,
+              row_var = "race",
+              col_var = "bthwht",
+              na.rm.row_var = TRUE,
+              ignore = c(race = "Non-Black,Non-Hispanic"))
+
+## -----------------------------------------------------------------------------
+cat_group_tbl(data = nlsy_cross_tab,
+              row_var = "race",
+              col_var = "bthwht",
+              na.rm.row_var = TRUE,
+              ignore = list(race = c("Non-Black,Non-Hispanic", "Hispanic")))
 
 ## -----------------------------------------------------------------------------
 names(depressive)
@@ -80,64 +71,22 @@ names(depressive)
 select_tbl(data = depressive, var_stem = "dep")
 
 ## -----------------------------------------------------------------------------
-# Default listwise removal, value '3' removed from data
 select_tbl(data = depressive, 
-           var_stem = "dep", 
-           ignore = 3)
+           var_stem = c("dep_1", "dep_4", "dep_6"),
+           var_input = "name")
 
-# Pairwise removal, value '3' removed from data
+## -----------------------------------------------------------------------------
 select_tbl(data = depressive, 
-           var_stem = "dep", 
-           ignore = 3,
+           var_stem = "dep",
            na_removal = "pairwise")
 
 ## -----------------------------------------------------------------------------
-
-# Default longer format
-select_tbl(data = depressive, 
-           var_stem = "dep")
-
-# Wider format
 select_tbl(data = depressive, 
            var_stem = "dep",
+           na_removal = "pairwise",
            pivot = "wider")
 
 ## -----------------------------------------------------------------------------
-select_tbl(data = depressive, 
-           var_stem = "dep",
-           pivot = "wider",
-           var_labels = c(
-             dep_1="how often child feels sad and blue",
-             dep_2="how often child feels nervous, tense, or on edge",
-             dep_3="how often child feels happy",
-             dep_4="how often child feels bored",
-             dep_5="how often child feels lonely",
-             dep_6="how often child feels tired or worn out",
-             dep_7="how often child feels excited about something",
-             dep_8="how often child feels too busy to get everything"
-           )
-)
-
-## -----------------------------------------------------------------------------
-# Default: counts and percentages
-select_tbl(data = depressive, 
-           var_stem = "dep",
-           pivot = "wider")
-
-# Counts only
-select_tbl(data = depressive, 
-           var_stem = "dep",
-           pivot = "wider",
-           only = "count")
-
-# Percents only
-select_tbl(data = depressive, 
-           var_stem = "dep",
-           pivot = "wider",
-           only = "percent")
-
-## -----------------------------------------------------------------------------
-
 dep_recoded <- 
   depressive |>
   dplyr::mutate(
@@ -153,56 +102,67 @@ dep_recoded <-
       .fns = ~ dplyr::case_when(.x == 1 ~ "often", 
                                 .x == 2 ~ "sometimes", 
                                 .x == 3 ~ "hardly ever")
-    )
-  )
+    ))
 
-# longer format
+## -----------------------------------------------------------------------------
+select_group_tbl(data = dep_recoded, 
+                 var_stem = "dep",
+                 group = "race")
+
+## -----------------------------------------------------------------------------
 select_group_tbl(data = dep_recoded, 
                  var_stem = "dep",
                  group = "race",
-                 pivot = "longer")
-
-# wider format
-select_group_tbl(data = dep_recoded, 
-                 var_stem = "dep",
-                 group = "race",
+                 na_removal = "pairwise",
                  pivot = "wider")
 
 ## -----------------------------------------------------------------------------
-
-# Default listwise removal: 'often' value removed from all
-# dep_ variables, and 'Non-Black/Non-Hispanic' value removed
-# from race variable
 select_group_tbl(data = dep_recoded, 
                  var_stem = "dep",
                  group = "race",
-                 pivot = "longer",
+                 na_removal = "pairwise",
+                 pivot = "wider",
                  ignore = c(dep = "often", race = "Non-Black/Non-Hispanic"))
 
-# Pairwise removal: 'often' value removed from all
-# dep_ variables, and 'Non-Black/Non-Hispanic' value removed
-# from race variable
+## -----------------------------------------------------------------------------
+# Default: percentages across each variable sum to one
 select_group_tbl(data = dep_recoded, 
                  var_stem = "dep",
                  group = "race",
-                 pivot = "longer",
-                 ignore = c(dep = "often", race = "Non-Black/Non-Hispanic"),
-                 na_removal = "pairwise")
+                 na_removal = "pairwise",
+                 pivot = "wider")
+
+# Rowwise: for each value of the variable, the percentages 
+# across all levels of the grouping variable sum to one
+select_group_tbl(data = dep_recoded, 
+                 var_stem = "dep",
+                 group = "race",
+                 margins = "rows",
+                 na_removal = "pairwise",
+                 pivot = "wider")
+
+# Columnwise: for each level of the grouping variable, 
+# the percentages across all values of the variable sum 
+# to one.
+select_group_tbl(data = dep_recoded, 
+                 var_stem = "dep",
+                 group = "race",
+                 margins = "columns",
+                 na_removal = "pairwise",
+                 pivot = "wider")
 
 ## -----------------------------------------------------------------------------
-
-select_group_tbl(data = dep_recoded, 
-                 var_stem = "dep",
-                 group = "race",
-                 pivot = "longer",
-                 ignore = list(race = c("Hispanic", "Non-Black/Non-Hispanic")))
+select_group_tbl(data = stem_social_psych, 
+                 var_stem = "belong_belong",
+                 group = "_w\\d",
+                 group_type = "pattern")
 
 ## -----------------------------------------------------------------------------
 select_group_tbl(data = stem_social_psych, 
                  var_stem = "belong_belong",
                  group = "_w\\d",
                  group_type = "pattern",
-                 pivot = "longer")
+                 group_name = "wave")
 
 ## -----------------------------------------------------------------------------
 select_group_tbl(data = stem_social_psych, 
@@ -210,15 +170,6 @@ select_group_tbl(data = stem_social_psych,
                  group = "_w\\d",
                  group_type = "pattern",
                  group_name = "wave",
-                 pivot = "longer")
-
-## -----------------------------------------------------------------------------
-select_group_tbl(data = stem_social_psych, 
-                 var_stem = "belong_belong",
-                 group = "_w\\d",
-                 group_type = "pattern",
-                 group_name = "wave",
-                 pivot = "longer",
                  var_labels = c(
                    belong_belongStem_w1 = "I feel like I belong in STEM (wave 1)",
                    belong_belongStem_w2 = "I feel like I belong in STEM (wave 2)"
@@ -230,9 +181,7 @@ select_group_tbl(data = stem_social_psych,
                  var_stem = "belong_belong",
                  group = "_w\\d",
                  group_type = "pattern",
-                 group_name = "wave",
-                 pivot = "longer",
-                 only = "count")
+                 group_name = "wave")
 
 # Counts only
 select_group_tbl(data = stem_social_psych, 
@@ -240,149 +189,129 @@ select_group_tbl(data = stem_social_psych,
                  group = "_w\\d",
                  group_type = "pattern",
                  group_name = "wave",
-                 pivot = "longer",
                  only = "count")
 
-# Percents only
+# Percentages only
 select_group_tbl(data = stem_social_psych, 
                  var_stem = "belong_belong",
                  group = "_w\\d",
                  group_type = "pattern",
                  group_name = "wave",
-                 pivot = "longer",
                  only = "percent")
 
 ## -----------------------------------------------------------------------------
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong")
+mean_tbl(data = sdoh, var_stem = "HHC_PCT")
 
 ## -----------------------------------------------------------------------------
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong",
-         ignore = 5)
-
-## -----------------------------------------------------------------------------
-
-# Default listwise removal
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong",
-         ignore = 5)
-
-# Pairwise removal
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong",
-         na_removal = "pairwise", 
-         ignore = 5)
-
-## -----------------------------------------------------------------------------
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong",
-         na_removal = "pairwise",
-         var_labels = c(
-           belong_1 = "I feel like I belong at this institution",
-           belong_2 = "I feel like part of the community",
-           belong_3 = "I feel valued by this institution")
+mean_tbl(
+  data = sdoh,
+  var_stem = c("HHC_PCT_HHA_PHYS_THERAPY",
+               "HHC_PCT_HHA_OCC_THERAPY",
+               "HHC_PCT_HHA_SPEECH"),
+  var_input = "name"
 )
 
 ## -----------------------------------------------------------------------------
-# Default: all summary statistics returned
-# (mean, sd, min, max, nobs)
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong",
+# Default listwise removal
+mean_tbl(data = sdoh, var_stem = "HHC_PCT")
+
+# Pairwise removal
+mean_tbl(data = sdoh, 
+         var_stem = "HHC_PCT",
          na_removal = "pairwise")
 
-# Means and non-missing observations returned
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong",
+## -----------------------------------------------------------------------------
+mean_tbl(data = sdoh, 
+         var_stem = "HHC_PCT",
          na_removal = "pairwise",
-         only = c("mean", "nobs"))
-
-# Means and standard deviations  returned
-mean_tbl(data = social_psy_data, 
-         var_stem = "belong",
-         na_removal = "pairwise",
-         only = c("mean", "sd"))
+         var_labels = c(
+           HHC_PCT_HHA_NURSING="% agencies offering nursing care services",
+           HHC_PCT_HHA_PHYS_THERAPY="% agencies offering physical therapy services",
+           HHC_PCT_HHA_OCC_THERAPY="% agencies offering occupational therapy services",
+           HHC_PCT_HHA_SPEECH="% agencies offering speech pathology services",
+           HHC_PCT_HHA_MEDICAL="% agencies offering medical social services",
+           HHC_PCT_HHA_AIDE="% agencies offering home health aide services"
+         ))
 
 ## -----------------------------------------------------------------------------
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "urm",
+mean_group_tbl(data = sdoh, 
+               var_stem = "HHC_PCT",
+               group = "REGION",
                group_type = "variable")
 
 ## -----------------------------------------------------------------------------
 # Default listwise removal
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "urm",
-               ignore = c(belong_belong = 5, urm = 0)
-               )
+mean_group_tbl(data = sdoh, 
+               var_stem = "HHC_PCT",
+               group = "REGION",
+               ignore = c(HHC_PCT = 0, REGION = "Northeast"))
 
 # Pairwise removal
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "urm",
+mean_group_tbl(data = sdoh, 
+               var_stem = "HHC_PCT",
+               group = "REGION",
                na_removal = "pairwise",
-               ignore = c(belong_belong = 5, urm = 0)
-               )
+               ignore = c(HHC_PCT = 0, REGION = "Northeast"))
+
+# Pairwise removal excluding several values from the same stem 
+# or group variable.
+mean_group_tbl(data = sdoh, 
+               var_stem = "HHC_PCT",
+               group = "REGION",
+               na_removal = "pairwise",
+               ignore = list(HHC_PCT = 0, REGION = c("Northeast", "South")))
 
 ## -----------------------------------------------------------------------------
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "urm",
-               ignore = list(belong_belong = c(4,5), urm = 0)
-               )
+set.seed(0803)
+symptoms_data <-
+  data.frame(
+    symptoms_t1 = sample(c(0:10, -999), replace = TRUE, size = 50),
+    symptoms_t2 = sample(c(NA, 0:10, -999), replace = TRUE, size = 50),
+    symptoms_t3 = sample(c(NA, 0:10, -999), replace = TRUE, size = 50)
+  )
 
-## -----------------------------------------------------------------------------
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "_w\\d",
-               group_type = "pattern")
-
-## -----------------------------------------------------------------------------
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "_w\\d",
+mean_group_tbl(data = symptoms_data, 
+               var_stem = "symptoms",
+               group = "_t\\d",
                group_type = "pattern",
-               group_name = "wave",
-               var_labels = c(
-                 belong_belongStem_w1 = "I feel like I belong in computing",
-                 belong_belongStem_w2 = "I feel like I belong in computing")
-)
+               ignore = c(symptoms = -999))
+
+## -----------------------------------------------------------------------------
+mean_group_tbl(data = symptoms_data, 
+               var_stem = "symptoms",
+               group = "_t\\d",
+               group_type = "pattern",
+               group_name = "time_point",
+               ignore = c(symptoms = -999), 
+               var_labels = c(symptoms_t1 = "# of symptoms at baseline",
+                              symptoms_t2 = "# of symptoms at 6 months follow up",
+                              symptoms_t3 = "# of symptoms at one-year follow up"))
 
 ## -----------------------------------------------------------------------------
 # Default: all summary statistics returned
 # (mean, sd, min, max, nobs)
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "_w\\d",
+mean_group_tbl(data = symptoms_data, 
+               var_stem = "symptoms",
+               group = "_t\\d",
                group_type = "pattern",
-               group_name = "wave",
-               var_labels = c(
-                 belong_belongStem_w1 = "I feel like I belong in computing",
-                 belong_belongStem_w2 = "I feel like I belong in computing")
-)
+               group_name = "time_point",
+               ignore = c(symptoms = -999))
 
 # Means and non-missing observations only
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "_w\\d",
+mean_group_tbl(data = symptoms_data, 
+               var_stem = "symptoms",
+               group = "_t\\d",
                group_type = "pattern",
-               group_name = "wave",
-               var_labels = c(
-                 belong_belongStem_w1 = "I feel like I belong in computing",
-                 belong_belongStem_w2 = "I feel like I belong in computing"),
-               only = c("mean", "nobs")
-)
+               group_name = "time_point",
+               ignore = c(symptoms = -999),
+               only = c("mean", "nobs"))
 
 # Means and standard deviations only
-mean_group_tbl(data = stem_social_psych, 
-               var_stem = "belong_belong",
-               group = "_w\\d",
+mean_group_tbl(data = symptoms_data, 
+               var_stem = "symptoms",
+               group = "_t\\d",
                group_type = "pattern",
-               group_name = "wave",
-               var_labels = c(
-                 belong_belongStem_w1 = "I feel like I belong in computing",
-                 belong_belongStem_w2 = "I feel like I belong in computing"),
-               only = c("mean", "sd")
-)
+               group_name = "time_point",
+               ignore = c(symptoms = -999),
+               only = c("mean", "sd"))
 

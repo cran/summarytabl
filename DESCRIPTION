@@ -1,31 +1,32 @@
 Package: summarytabl
 Type: Package
-Title: Generate Summary Tables for Continuous, Ordinal, and Categorical
+Title: Generate Summary Tables for Categorical, Ordinal, and Continuous
         Data
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
-    person(
-      "Ama", "Nyame-Mensah",
-      email = "ama@anyamemensah.com",
-      role = c("aut", "cre")
-    )
-  )
+    person(given = "Ama", family = "Nyame-Mensah", 
+    email = "ama@anyamemensah.com", role = c("aut", "cre")))
 Maintainer: Ama Nyame-Mensah <ama@anyamemensah.com>
-URL: https://anyamemensah.github.io/summarytabl/
-Description: Provides functions for tabulating and summarizing continuous, ordinal, 
-    and categorical variables in data frames. The package was designed to streamline 
-    exploratory data analysis and simplify the creation of summary tables for reports 
-    and other purposes.
+URL: https://anyamemensah.github.io/summarytabl/,
+        https://github.com/anyamemensah/summarytabl
+BugReports: https://github.com/anyamemensah/summarytabl/issues
+Description: Provides functions for tabulating and summarizing 
+    categorical, multiple response, ordinal, and continuous 
+    variables in R data frames. Makes it easy to create clear, 
+    structured summary tables, so you spend less time wrangling 
+    data and more time interpreting it.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: dplyr, purrr, rlang, stats, tibble, tidyr
+Imports: cli (>= 3.6.5), dplyr (>= 1.1.4), purrr (>= 1.1.0), rlang (>=
+        1.1.6), stats (>= 4.4.2), tibble (>= 3.3.0), tidyr (>= 1.3.1),
 RoxygenNote: 7.3.3
-Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+Suggests: knitr (>= 1.50), rmarkdown (>= 2.29), testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Config/testthat/edition: 3
 Depends: R (>= 4.1.0)
 NeedsCompilation: no
-Packaged: 2025-09-30 02:56:26 UTC; AmaNM
+Packaged: 2025-11-06 00:29:09 UTC; AmaNM
 Author: Ama Nyame-Mensah [aut, cre]
 Repository: CRAN
-Date/Publication: 2025-10-06 08:00:02 UTC
+Date/Publication: 2025-11-06 00:40:02 UTC

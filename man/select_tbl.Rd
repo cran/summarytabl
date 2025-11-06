@@ -7,62 +7,82 @@
 select_tbl(
   data,
   var_stem,
-  escape_stem = FALSE,
+  var_input = "stem",
+  regex_stem = FALSE,
   ignore_stem_case = FALSE,
   na_removal = "listwise",
   pivot = "longer",
   only = NULL,
   var_labels = NULL,
-  ignore = NULL
+  ignore = NULL,
+  force_pivot = FALSE
 )
 }
 \arguments{
 \item{data}{A data frame.}
 
-\item{var_stem}{A character string of a variable stem or the full name of a variable
-in \code{data}.}
+\item{var_stem}{A character vector with one or more elements, where each
+represents either a variable stem or the complete name of a variable present
+in \code{data}. A variable 'stem' refers to a common naming pattern shared among
+related variables, typically reflecting repeated measures of the same idea
+or a group of items assessing a single concept.}
 
-\item{escape_stem}{A logical value indicating whether to escape \code{var_stem}. Default
-is \code{FALSE}.}
+\item{var_input}{A character string specifying whether the values
+supplied to \code{var_stem} should be treated as variable stems (\code{stem}) or
+as complete variable names (\code{name}). By default, this is set to \code{stem},
+so the function searches for variables that begin with each stem provided.
+Setting this argument to \code{name} directs the function to look for variables
+that exactly match the provided names.}
 
-\item{ignore_stem_case}{A logical value indicating whether the search for columns
-matching the supplied \code{var_stem} is case-insensitive. Default is \code{FALSE}.}
+\item{regex_stem}{A logical value indicating whether to use Perl-compatible
+regular expressions when searching for variable stems. Default is \code{FALSE}.}
 
-\item{na_removal}{A character string specifying how to remove missing values. Should
-be one of \code{pairwise} or \code{listwise}. Default is \code{listwise}.}
+\item{ignore_stem_case}{A logical value indicating whether the search for
+columns matching the supplied \code{var_stem} is case-insensitive. Default is
+\code{FALSE}.}
 
-\item{pivot}{A character string specifying the format of the returned summary table.
-The default is \code{longer}, which returns the data in long format. To return the data in
-wide format, use \code{wider}.}
+\item{na_removal}{A character string that specifies the method for handling
+missing values: \code{pairwise} or \code{listwise}. Defaults to \code{listwise}.}
 
-\item{only}{A character string or vector of character strings of the kinds of summary
-data to return. Default is \code{NULL}, which returns counts (count) and percentages (percent).}
+\item{pivot}{A character string that determines the format of the table. By
+default, \code{longer} returns the data in the long format. To receive the data in
+the \code{wide} format, specify \code{wider}.}
 
-\item{var_labels}{An optional named character vector or list where each element maps
-labels to variable names. If any element is unnamed or if any labels do not match
-variables in returned from \code{data}, all labels will be ignored and the table will be
-printed without them.}
+\item{only}{A character string or vector of character strings of the types of
+summary data to return. Default is \code{NULL}, which returns both counts and
+percentages. To return only counts or percentages, use \code{count} or \code{percent},
+respectively.}
 
-\item{ignore}{An optional vector that contains values to exclude from the data. Default
-is \code{NULL}, which includes all present values.}
+\item{var_labels}{An optional named character vector or list used to assign
+custom labels to variable names. Each element must be named and correspond
+to a variable included in the returned table. If \code{var_input} is set to \code{stem},
+and any element is either unnamed or refers to a variable not present in the
+table, all labels will be ignored and the table will be printed without them.}
+
+\item{ignore}{An optional named vector or list indicating values to exclude
+from variables matching specified stems (or names). Defaults to \code{NULL},
+indicating that all values are retained. To specify exclusions for variables
+identified by \code{var_stem}, use the corresponding stems or variable names as
+names in the vector or list. To exclude multiple values from these variables,
+supply them as a named list.}
+
+\item{force_pivot}{A logical value that enables pivoting to the 'wider'
+format even when variables have inconsistent value sets. By default, this is
+set to \code{FALSE} to prevent reshaping errors when values differ across variables
+in the returned table. Set to \code{TRUE} to override this safeguard and pivot to
+the 'wider' format regardless of value inconsistencies.}
 }
 \value{
-A tibble displaying frequency counts and/or percentages for each value of a
-set of variables sharing the same variable stem. When the output is in the wider format,
-columns beginning with \code{count_value} and \code{percent_value} prefixes report the count and
-percentage, respectively, for each distinct response  value of the variable.
+A tibble displaying the count and percentage for each category in a
+multi-response variable.
 }
 \description{
-\code{select_tbl()} presents frequency counts and percentages
-(count, percent) for binary (e.g., Unselected/Selected) and ordinal (e.g.,
-strongly disagree to strongly agree) variables with the same variable stem.
-A variable stem is a common prefix found in related variable names, often
-corresponding to similar survey items, that represents a shared concept before
-unique identifiers (like time points) are added. For example, in the \code{stem_social_psych}
-dataset, the two variables \code{belong_belongStem_w1} and \code{belong_belongStem_w2}
-share the variable stem \code{belong_belongStem} (e.g., "I feel like an outsider in
-STEM"), with suffixes (_w1, _w2) indicating different measurement waves. By
-default, missing data are excluded from the calculations in a listwise fashion.
+\code{select_tbl()} displays frequency counts and percentages
+for multiple response variables (e.g., a series of questions where
+participants answer "Yes" or "No" to each item) as well as ordinal
+variables (such as Likert or Likert-type items with responses ranging
+from "Strongly Disagree" to "Strongly Agree", where respondents select
+one response per statement, question, or item).
 }
 \examples{
 select_tbl(data = tas,

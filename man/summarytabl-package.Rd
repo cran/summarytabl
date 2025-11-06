@@ -4,14 +4,16 @@
 \name{summarytabl-package}
 \alias{summarytabl}
 \alias{summarytabl-package}
-\title{summarytabl: Generate Summary Tables for Continuous, Ordinal, and Categorical Data}
+\title{summarytabl: Generate Summary Tables for Categorical, Ordinal, and Continuous Data}
 \description{
-Provides functions for tabulating and summarizing continuous, ordinal, and categorical variables in data frames. The package was designed to streamline exploratory data analysis and simplify the creation of summary tables for reports and other purposes.
+Provides functions for tabulating and summarizing categorical, multiple response, ordinal, and continuous variables in R data frames. Makes it easy to create clear, structured summary tables, so you spend less time wrangling data and more time interpreting it.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://anyamemensah.github.io/summarytabl/}
+  \item \url{https://github.com/anyamemensah/summarytabl}
+  \item Report bugs at \url{https://github.com/anyamemensah/summarytabl/issues}
 }
 
 }

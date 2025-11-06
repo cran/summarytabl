@@ -1,23 +1,21 @@
 #' @title Summarize a categorical variable
 #'
-#' @description `cat_group_tbl()` presents frequency counts and percentages 
-#' (count, percent) for nominal or categorical variables. Missing data can 
-#' be excluded from the calculations.
+#' @description `cat_tbl()` summarizes nominal or categorical variables, 
+#' returning frequency counts and percentages.
 #'
 #' @param data A data frame.
-#' @param var A character string of the name of a variable in `data` containing 
-#' categorical data.
+#' @param var A character string of the name of a variable in `data` 
+#' containing categorical data.
 #' @param na.rm A logical value indicating whether missing values should be 
 #' removed before calculations. Default is `FALSE`.
-#' @param only A character string, or vector of character strings, of the 
-#' types of summary data to return. Default is `NULL`, which returns both 
-#' counts and percentages. To return only counts or percentages, use `count` 
-#' or `percent`, respectively.
-#' @param ignore An optional vector that contains values to exclude from the data. 
-#' Default is `NULL`, which includes all present values.
+#' @param only A character string or vector of character strings of the types 
+#' of summary data to return. Default is `NULL`, which returns both counts and 
+#' percentages. To return only counts or percentages, use `count` or `percent`, 
+#' respectively.
+#' @param ignore An optional vector that contains values to exclude from `var`. 
+#' Default is `NULL`, which retains all values.
 #'
-#' @returns A tibble displaying the relative frequency counts and/or percentages 
-#' of `row_var`.
+#' @returns A tibble showing the count and percentage of each category in `var`
 #'
 #' @author Ama Nyame-Mensah
 #'
@@ -34,69 +32,59 @@
 #'
 #' @export
 cat_tbl <- function(data, var, na.rm = FALSE, only = NULL, ignore = NULL) {
+  set_call()
+  on.exit({ .summarytabl$env <- NULL }, add = TRUE)
+  
+  args <- list(
+    data = data,
+    table_type = "cat",
+    group_func = FALSE,
+    var_name = var,
+    var_label = "var",
+    variable_type = "valid_var_types",
+    na.rm = na.rm,
+    label_na_rm = "na.rm",
+    only = only,
+    ignore = ignore
+  )
+  
+  checks <- check_cat_args(args)
+  check_var_name <- checks$var$var
+  check_ignore <- checks$ignore$ignore
+  check_na.rm <- checks$na.rm$na.rm
+  check_only <- checks$only$only
+  check_dtype <- checks$dtype$dtype
+  check_table_type <- checks$table_type$table_type
+  
+  data_sub <- checks$data$df[check_var_name]
 
-  # Check 'data' is a data frame with at least one row/column
-  if (!is.data.frame(data)) {
-    stop("The 'data' argument is not a data frame.")
+  ignore_result <-
+    extract_ignore_map(
+      vars = check_var_name,
+      ignore = check_ignore,
+      var_stem_map = NULL
+    )
+  ignore_map <- ignore_result$ignore_map
+  
+  if (!is.null(ignore_map)) {
+    data_sub[[check_var_name]] <- 
+      replace_with_na(data_sub[[check_var_name]], ignore_map[[check_var_name]])
   }
-
-  if (prod(dim(data)) == 0) {
-    stop("The 'data' argument is empty.")
+  
+  if (check_na.rm) {
+    data_sub <- data_sub[!is.na(data_sub[[check_var_name]]), ]
   }
-
-  # Check 'var' is a character vector of length one and exists in 'data'
-  if (!is.character(var) || length(var) != 1) {
-    stop("Invalid 'var' argument. 'var' must be a character vector of length one.")
-  }
-
-  if (!(var %in% colnames(data))) {
-    stop("The 'var' argument is not a column in 'data'.")
-  }
-
-  # Check 'na.rm' is logical and length one
-  if (!is.logical(na.rm) || length(na.rm) != 1) {
-    stop("Invalid 'na.rm' argument. 'na.rm' must be a logical vector of length one.")
-  }
-
-  # Check 'only'
-  if (is.null(only)) {
-    only <- only_type("cat")
-  } else {
-    only <- tolower(trimws(only))
-  }
-
-  if (!(all(only %in% only_type("cat"))) || length(only) == 0){
-    stop("Invalid 'only' argument. 'only' must be a character vector of length at least one.")
-  }
-
-  # Remove values that are set to 'ignore'
-  if (!is.null(ignore) && is.vector(ignore) && length(ignore) > 0) {
-    
-    data <-
-      data |>
-      dplyr::mutate(dplyr::across(.cols = dplyr::all_of(var) , 
-                                  .fns = ~ ifelse(. %in% ignore, NA, .)))
-  }
-
-  # Remove rows with NAs if requested
-  if (na.rm) {
-    data <- stats::na.omit(data[var])
-  }
-
-  # Create table
+  
+  cat_tabl <- 
+    dplyr::count(data_sub, .data[[check_var_name]], name = "count") |>
+    dplyr::mutate(percent = count / sum(count))
+  
   cat_tabl <-
-    data |>
-    dplyr::group_by(.data[[var]]) |>
-    dplyr::summarize(count = dplyr::n()) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(percent = .data[["count"]] / sum(.data[["count"]]))
-
-  # Remove unrequested 'only' columns
-  cat_tabl <- drop_only_cols(data = cat_tabl,
-                             only = only,
-                             only_type = only_type("cat"))
-
-  cat_tabl
+    drop_only_cols(
+      data = cat_tabl,
+      only = check_only,
+      only_type = only_type(check_table_type)
+    )
+  
+  return(tibble::as_tibble(cat_tabl))
 }
-
-
